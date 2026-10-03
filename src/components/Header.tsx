@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { ShieldAlert, Activity, Database, Lock, Radio, FileText, BellRing, Sparkles } from 'lucide-react';
+import { ShieldAlert, Lock, FileText, BellRing, Clock } from 'lucide-react';
 
 interface HeaderProps {
   onOpenNoticeModal: () => void;
   onOpenAlertModal: () => void;
   onOpenReportModal: () => void;
+  onBackToLaunch?: () => void;
   goldenHourRemaining: string;
 }
 
@@ -14,150 +15,85 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNoticeModal,
   onOpenAlertModal,
   onOpenReportModal,
+  onBackToLaunch,
   goldenHourRemaining,
 }) => {
   return (
-    <header className="no-print" style={{ paddingTop: '20px', marginBottom: '24px' }}>
-      {/* Top Banner with Ministry Branding */}
+    <header className="no-print" style={{ paddingTop: '16px', marginBottom: '16px' }}>
       <div
-        className="glass-panel"
+        className="surface"
         style={{
-          padding: '16px 24px',
+          padding: '12px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '16px',
-          borderColor: 'rgba(56, 189, 248, 0.2)',
+          gap: '14px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div
-            style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(99, 102, 241, 0.3) 100%)',
-              border: '1px solid rgba(56, 189, 248, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#00f2fe',
-              boxShadow: '0 0 16px rgba(0, 242, 254, 0.3)',
-            }}
-          >
-            <ShieldAlert size={28} />
-          </div>
+        {/* Left: Navigation & Branding */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {onBackToLaunch && (
+            <button
+              onClick={onBackToLaunch}
+              className="btn btn-ghost"
+              style={{ padding: '6px 12px', fontSize: '12.5px' }}
+            >
+              ← All Incidents
+            </button>
+          )}
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.5px' }}>
-                ORION <span style={{ color: 'var(--accent-cyan)' }}>SIH26183</span>
-              </h1>
-              <span className="badge badge-cyan">v2.4 Production Prototype</span>
-              <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span className="pulse-dot pulse-dot-emerald" />
-                Live Indexers Active
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/Orion_SIH26183.png?v=2"
+              alt="Orion SIH26183"
+              style={{ height: '30px', width: 'auto', objectFit: 'contain' }}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4' }}>
+                  Cybercrime Asset Recovery &amp; Attribution Desk
+                </span>
+                <span className="badge badge-amber" style={{ fontSize: '10px' }}>I4C / MHA</span>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                National Cyber Crime Reporting Portal (1930) · Real-Time Fast-Freeze
+              </div>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-              Real-Time Crypto Fraud Attribution &amp; Fast-Freeze Platform &bull; <strong style={{ color: 'var(--text-primary)' }}>Indian Cyber Crime Coordination Centre (I4C)</strong>, MHA
-            </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Right: Golden Hour Status & Operational Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={onOpenNoticeModal} className="btn btn-hazard">
-            <Lock size={15} />
-            BNSS Sec 107 Freeze Order
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '5px 10px', borderRadius: '5px',
+            background: 'rgba(220, 38, 38, 0.08)',
+            border: '1px solid rgba(220, 38, 38, 0.2)',
+            fontSize: '12px',
+          }}>
+            <Clock size={13} color="#f87171" />
+            <span style={{ color: 'var(--text-muted)' }}>Golden Hour:</span>
+            <span className="font-mono" style={{ color: '#fca5a5', fontWeight: 600 }}>
+              {goldenHourRemaining}
+            </span>
+          </div>
+
+          <button onClick={onOpenReportModal} className="btn btn-ghost" style={{ fontSize: '12.5px' }}>
+            <FileText size={14} />
+            Forensic Report
           </button>
 
-          <button onClick={onOpenAlertModal} className="btn btn-primary">
-            <BellRing size={15} />
-            Dispatch Real-Time Alert
+          <button onClick={onOpenAlertModal} className="btn btn-ghost" style={{ fontSize: '12.5px' }}>
+            <BellRing size={14} />
+            Dispatch Alerts
           </button>
 
-          <button onClick={onOpenReportModal} className="btn btn-secondary">
-            <FileText size={15} />
-            BSA 2023 Report
+          <button onClick={onOpenNoticeModal} className="btn btn-hazard" style={{ fontSize: '12.5px' }}>
+            <Lock size={14} />
+            Issue §107 BNSS Freeze
           </button>
-        </div>
-      </div>
-
-      {/* Live Status & Golden Hour Ticker */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '12px',
-          marginTop: '12px',
-        }}
-      >
-        <div className="glass-panel" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ color: 'var(--accent-cyan)' }}>
-            <Database size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Multi-Chain Graph Store
-            </div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Neo4j GDS &bull; Tron/ETH/BTC/Arb
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ color: 'var(--accent-purple)' }}>
-            <Activity size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              AI/ML Typology Detectors
-            </div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              OddBall + Burst + XGBoost Ladder
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ color: 'var(--accent-amber)' }}>
-            <Radio size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              NCRP / SAHYOG Sync
-            </div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              1930 Cyber Helpline Gateway
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="glass-panel"
-          style={{
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            borderColor: 'rgba(239, 68, 68, 0.3)',
-          }}
-        >
-          <div style={{ color: 'var(--accent-hazard)' }}>
-            <ShieldAlert size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '11px', color: '#fca5a5', textTransform: 'uppercase', fontWeight: 700 }}>
-              Golden Hour Window
-            </div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#fee2e2' }}>
-              {goldenHourRemaining} remaining
-            </div>
-          </div>
         </div>
       </div>
     </header>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { SAMPLE_CASES } from '../data/mockCases';
 import { CaseData, WalletNode } from '../types/orion';
 import { Header } from '../components/Header';
+import { WelcomePage } from '../components/WelcomePage';
+import { LaunchPage } from '../components/LaunchPage';
 import { ComplaintIngestion } from '../components/ComplaintIngestion';
 import { MoneyFlowGraph } from '../components/MoneyFlowGraph';
 import { TypologyDetector } from '../components/TypologyDetector';
@@ -12,46 +14,53 @@ import { MinCutRecommender } from '../components/MinCutRecommender';
 import { LegalNoticeModal } from '../components/LegalNoticeModal';
 import { InvestigationReport } from '../components/InvestigationReport';
 import { AlertDispatcherModal } from '../components/AlertDispatcherModal';
-import {
-  Layers,
-  ShieldAlert,
-  Building2,
-  Target,
-  FileText,
-  Loader2,
-  Sparkles,
-  Cpu,
-  Clock,
-  ArrowRight,
-} from 'lucide-react';
+import { Layers, ShieldAlert, Building2, Target, Loader2 } from 'lucide-react';
+
+type TabKey = 'GRAPH' | 'TYPOLOGY' | 'ATTRIBUTION' | 'MINCUT';
+
+const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+  { key: 'GRAPH',       label: 'Transaction Graph',     icon: <Layers size={14} /> },
+  { key: 'TYPOLOGY',    label: 'Typology Screening',    icon: <ShieldAlert size={14} /> },
+  { key: 'ATTRIBUTION', label: 'VASP Attribution',      icon: <Building2 size={14} /> },
+  { key: 'MINCUT',      label: 'Min-Cut Freeze Target', icon: <Target size={14} /> },
+];
 
 export default function Home() {
+  const [viewMode, setViewMode] = useState<'WELCOME' | 'QUEUE' | 'WORKSPACE'>('WELCOME');
   const [currentCase, setCurrentCase] = useState<CaseData>(SAMPLE_CASES['NCRP-2026-88192']);
-  const [activeTab, setActiveTab] = useState<'GRAPH' | 'TYPOLOGY' | 'ATTRIBUTION' | 'MINCUT'>('GRAPH');
+  const [activeTab, setActiveTab] = useState<TabKey>('GRAPH');
   const [selectedNode, setSelectedNode] = useState<WalletNode | null>(null);
-  const [isTracing, setIsTracing] = useState<boolean>(false);
+  const [isTracing, setIsTracing] = useState(false);
 
-  // Modals state
-  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState<boolean>(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
-  const [isAlertModalOpen, setIsAlertModalOpen] = useState<boolean>(false);
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [noticeTargetNode, setNoticeTargetNode] = useState<WalletNode | null>(null);
 
-  // Golden hour countdown (simulated dynamic countdown)
-  const [goldenHourRemaining, setGoldenHourRemaining] = useState<string>('38m 42s');
+  const [goldenHourRemaining, setGoldenHourRemaining] = useState('38m 42s');
 
   useEffect(() => {
     let secondsLeft = 38 * 60 + 42;
-    const interval = setInterval(() => {
+    const iv = setInterval(() => {
       if (secondsLeft > 0) {
         secondsLeft -= 1;
-        const mins = Math.floor(secondsLeft / 60);
-        const secs = secondsLeft % 60;
-        setGoldenHourRemaining(`${mins}m ${secs < 10 ? '0' : ''}${secs}s`);
+        const m = Math.floor(secondsLeft / 60);
+        const s = secondsLeft % 60;
+        setGoldenHourRemaining(`${m}m ${s < 10 ? '0' : ''}${s}s`);
       }
     }, 1000);
-    return () => clearInterval(interval);
+    return () => clearInterval(iv);
   }, []);
+
+  const handleLaunchFromPortal = (caseData: CaseData) => {
+    setCurrentCase(caseData);
+    setSelectedNode(null);
+    setViewMode('WORKSPACE');
+    setIsTracing(true);
+    setTimeout(() => {
+      setIsTracing(false);
+    }, 450);
+  };
 
   const handleSelectCase = (newCase: CaseData) => {
     setCurrentCase(newCase);
@@ -59,160 +68,122 @@ export default function Home() {
     setIsTracing(false);
   };
 
-  const handleTraceStart = () => {
-    setIsTracing(true);
-  };
-
   const handleOpenNoticeForNode = (node: WalletNode) => {
     setNoticeTargetNode(node);
     setIsNoticeModalOpen(true);
   };
 
+  if (viewMode === 'WELCOME') {
+    return (
+      <main className="orion-root">
+        <WelcomePage onEnterApp={() => setViewMode('QUEUE')} />
+      </main>
+    );
+  }
+
+  if (viewMode === 'QUEUE') {
+    return (
+      <main className="orion-root">
+        <LaunchPage
+          onSelectCaseAndLaunch={handleLaunchFromPortal}
+          onBackToWelcome={() => setViewMode('WELCOME')}
+        />
+      </main>
+    );
+  }
+
   return (
-    <main className="orion-container">
-      {/* Header with I4C Branding & Status */}
+    <main className="orion-root">
       <Header
-        onOpenNoticeModal={() => {
-          setNoticeTargetNode(null);
-          setIsNoticeModalOpen(true);
-        }}
+        onBackToLaunch={() => setViewMode('QUEUE')}
+        onOpenNoticeModal={() => { setNoticeTargetNode(null); setIsNoticeModalOpen(true); }}
         onOpenAlertModal={() => setIsAlertModalOpen(true)}
         onOpenReportModal={() => setIsReportModalOpen(true)}
         goldenHourRemaining={goldenHourRemaining}
       />
 
-      {/* Module 1: Ingestion & Case Switcher */}
       <ComplaintIngestion
         currentCase={currentCase}
         onSelectCase={handleSelectCase}
-        onTraceStart={handleTraceStart}
+        onTraceStart={() => setIsTracing(true)}
       />
 
-      {/* Tracing In-Progress Overlay or Main Analysis Area */}
       {isTracing ? (
-        <div
-          className="glass-panel"
-          style={{
-            padding: '80px 20px',
-            textAlign: 'center',
-            marginBottom: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-          }}
-        >
-          <Loader2 size={44} color="var(--accent-cyan)" className="animate-spin" />
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff' }}>
-            Traversing Multi-Chain Ledger &amp; Resolving Clusters...
+        /* Tracing loader */
+        <div className="surface" style={{
+          padding: '60px 20px', textAlign: 'center',
+          marginBottom: '16px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+        }}>
+          <Loader2 size={32} color="var(--primary)" className="animate-spin" />
+          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#fbf8f4' }}>
+            Traversing Multi-Hop Ledger &amp; Computing Clusters…
           </h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '500px' }}>
-            Expanding forward hops, matching cross-chain bridge events, computing OddBall egonet scores, and querying the FIU-IND VASP cluster database.
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '460px', lineHeight: 1.5 }}>
+            Expanding forward hops, matching cross-chain bridge events, and evaluating egonet anomalies against the FIU-IND registry.
           </p>
         </div>
       ) : (
         <>
-          {/* Main Navigation Tabs */}
+          {/* Navigation Tabs */}
           <div className="tabs-bar no-print">
-            <button
-              onClick={() => setActiveTab('GRAPH')}
-              className={`tab-btn ${activeTab === 'GRAPH' ? 'active' : ''}`}
-            >
-              <Layers size={16} />
-              Money-Flow Transaction Graph
-            </button>
-
-            <button
-              onClick={() => setActiveTab('TYPOLOGY')}
-              className={`tab-btn ${activeTab === 'TYPOLOGY' ? 'active' : ''}`}
-            >
-              <ShieldAlert size={16} />
-              FATF Typology &amp; OddBall Anomaly Engine
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ATTRIBUTION')}
-              className={`tab-btn ${activeTab === 'ATTRIBUTION' ? 'active' : ''}`}
-            >
-              <Building2 size={16} />
-              VASP Attribution Ladder (3 Stages)
-            </button>
-
-            <button
-              onClick={() => setActiveTab('MINCUT')}
-              className={`tab-btn ${activeTab === 'MINCUT' ? 'active' : ''}`}
-            >
-              <Target size={16} />
-              Min-Cut Freeze Optimizer
-            </button>
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`tab-btn ${activeTab === t.key ? 'active' : ''}`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          {/* Tab 1: Graph Canvas */}
           {activeTab === 'GRAPH' && (
             <MoneyFlowGraph
               nodes={currentCase.nodes}
               edges={currentCase.edges}
-              onSelectNode={(n) => setSelectedNode(n)}
+              onSelectNode={n => setSelectedNode(n)}
               selectedNode={selectedNode}
               onTriggerFreeze={handleOpenNoticeForNode}
             />
           )}
-
-          {/* Tab 2: Typologies & Oddball */}
-          {activeTab === 'TYPOLOGY' && (
-            <TypologyDetector currentCase={currentCase} />
-          )}
-
-          {/* Tab 3: VASP Attribution */}
+          {activeTab === 'TYPOLOGY' && <TypologyDetector currentCase={currentCase} />}
           {activeTab === 'ATTRIBUTION' && (
             <VaspAttribution
               attribution={currentCase.attribution}
-              onOpenNoticeModal={() => {
-                setNoticeTargetNode(null);
-                setIsNoticeModalOpen(true);
-              }}
+              onOpenNoticeModal={() => { setNoticeTargetNode(null); setIsNoticeModalOpen(true); }}
             />
           )}
-
-          {/* Tab 4: Min Cut Recommender */}
           {activeTab === 'MINCUT' && (
             <MinCutRecommender
               minCut={currentCase.minCut}
               currentCase={currentCase}
-              onOpenNoticeModal={() => {
-                setNoticeTargetNode(null);
-                setIsNoticeModalOpen(true);
-              }}
+              onOpenNoticeModal={() => { setNoticeTargetNode(null); setIsNoticeModalOpen(true); }}
             />
           )}
         </>
       )}
 
-      {/* Quick Summary Floating Footer / Statutory Bar */}
+      {/* Footer */}
       <footer
-        className="glass-panel no-print"
+        className="no-print"
         style={{
-          padding: '14px 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-          fontSize: '12px',
-          color: 'var(--text-secondary)',
+          marginTop: '8px', padding: '12px 18px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '10px',
+          borderTop: '1px solid var(--border-dim)',
+          fontSize: '11.5px', color: 'var(--text-muted)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="badge badge-emerald">BSA 2023 Compliant</span>
-          <span>
-            Every alert preserves source tx hashes, timestamps &amp; data provenance supporting legal admissibility.
-          </span>
+          <span className="badge badge-emerald" style={{ fontSize: '9.5px' }}>BSA 2023 Compliant</span>
+          <span>Every alert preserves tx hashes, timestamps &amp; cluster provenance for legal admissibility.</span>
         </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '14px', color: 'var(--text-dim)' }}>
           <span>Indian Cyber Crime Coordination Centre (I4C)</span>
-          <span>&bull;</span>
-          <span style={{ color: 'var(--accent-cyan)' }}>SIH26183 &bull; Team ORION</span>
+          <span>·</span>
+          <span style={{ color: 'var(--text-muted)' }}>SIH26183 · Team Orion</span>
         </div>
       </footer>
 
@@ -224,14 +195,12 @@ export default function Home() {
           onClose={() => setIsNoticeModalOpen(false)}
         />
       )}
-
       {isReportModalOpen && (
         <InvestigationReport
           currentCase={currentCase}
           onClose={() => setIsReportModalOpen(false)}
         />
       )}
-
       {isAlertModalOpen && (
         <AlertDispatcherModal
           currentCase={currentCase}

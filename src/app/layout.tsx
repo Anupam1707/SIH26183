@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ORION | Real-Time Crypto Fraud Attribution & Fast-Freeze Platform",
+  title: "Orion | Real-Time Crypto Fraud Attribution & Fast-Freeze Platform",
   description:
     "Ministry of Home Affairs - Indian Cyber Crime Coordination Centre (I4C). Real-time identification of fraud-linked cryptocurrency exchanges from suspect wallet addresses.",
 };
@@ -18,7 +18,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>

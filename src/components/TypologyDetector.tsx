@@ -3,359 +3,245 @@
 import React, { useState } from 'react';
 import { LaunderingTypologyMatch, CaseData } from '../types/orion';
 import {
-  ShieldAlert,
-  GitFork,
-  ArrowDownRight,
-  RefreshCw,
-  Flame,
-  Layers,
-  Activity,
-  Binary,
-  Cpu,
-  BarChart2,
-  CheckCircle2,
-  AlertTriangle,
+  ShieldAlert, GitFork, ArrowDownRight, RefreshCw,
+  Flame, Layers, Activity, Cpu, BarChart2, CheckCircle2,
 } from 'lucide-react';
 
 interface TypologyDetectorProps {
   currentCase: CaseData;
 }
 
+const TYPOLOGY_DEFS = [
+  { id: 'TYP-01', name: 'Fan-In Convergence',             icon: GitFork,       severity: 'CRITICAL', desc: 'Multiple victim wallets funnelling into a single suspect aggregator within a condensed time window.' },
+  { id: 'TYP-02', name: 'Fan-Out / Scatter Smurfing',      icon: ArrowDownRight, severity: 'HIGH',     desc: 'Splitting proceeds into sub-threshold fractional transfers below AML trigger amounts (Smurfing).' },
+  { id: 'TYP-03', name: 'Pass-Through Rapid Layering',     icon: Layers,        severity: 'CRITICAL', desc: 'Serial hops through intermediary mules with dwell time <15 min and near 100% principal forwarding.' },
+  { id: 'TYP-04', name: 'Peel Chain Commission Slicing',   icon: RefreshCw,     severity: 'HIGH',     desc: 'Small % peeled to burner wallets while the dominant remainder is propelled forward.' },
+  { id: 'TYP-05', name: 'Mixer, Privacy Coin & Bridging',  icon: Activity,      severity: 'CRITICAL', desc: 'Use of Tornado Cash, Railgun, or cross-chain bridges (Stargate, Hop) to obscure provenance.' },
+  { id: 'TYP-06', name: 'Temporary Burner Wallets',        icon: Flame,         severity: 'HIGH',     desc: 'Addresses generated within 48h of illicit receipt with zero history, drained to zero.' },
+  { id: 'TYP-07', name: 'Circular Round-Tripping',         icon: RefreshCw,     severity: 'MEDIUM',   desc: 'Closed-loop cycles returning funds to prior addresses or syndicate hot wallets.' },
+];
+
 export const TypologyDetector: React.FC<TypologyDetectorProps> = ({ currentCase }) => {
   const [activeTab, setActiveTab] = useState<'TYPOLOGIES' | 'ODDBALL' | 'XGBOOST'>('TYPOLOGIES');
-
-  const typologies = currentCase.typologies;
-  const xgboostFeatures = currentCase.xgboostFeatures;
-
-  // Complete list of 7 typologies defined in the MHA/I4C ORION specification
-  const ALL_TYPOLOGY_RULES = [
-    {
-      id: 'TYP-01',
-      name: 'Fan-In Convergence',
-      icon: <GitFork size={18} />,
-      desc: 'Multiple distinct victim complaints or unlinked wallet addresses funnelling funds into a solitary suspect aggregator wallet within a condensed time window.',
-      defaultSeverity: 'CRITICAL',
-    },
-    {
-      id: 'TYP-02',
-      name: 'Fan-Out / Scatter Smurfing',
-      icon: <ArrowDownRight size={18} />,
-      desc: 'Splitting consolidated fraud proceeds into numerous fractional sub-threshold transfers below automated AML trigger amounts (Smurfing).',
-      defaultSeverity: 'HIGH',
-    },
-    {
-      id: 'TYP-03',
-      name: 'Pass-Through Rapid Layering',
-      icon: <Layers size={18} />,
-      desc: 'Serial transfer through a linear chain of intermediary mule accounts with minimal holding dwell time (<15 mins) and near 100% principal preservation.',
-      defaultSeverity: 'CRITICAL',
-    },
-    {
-      id: 'TYP-04',
-      name: 'Peel Chain Commission Slicing',
-      icon: <RefreshCw size={18} />,
-      desc: 'Successive transactions where a small percentage (<10%) is peeled off to burner/commission wallets while the dominant remainder is propelled forward.',
-      defaultSeverity: 'HIGH',
-    },
-    {
-      id: 'TYP-05',
-      name: 'Mixer, Privacy Coin & Bridge Hopping',
-      icon: <Activity size={18} />,
-      desc: 'Interaction with privacy pools (Tornado Cash, Railgun) or cross-chain bridges (Stargate, Hop Protocol) to obfuscate provenance across ledger boundaries.',
-      defaultSeverity: 'CRITICAL',
-    },
-    {
-      id: 'TYP-06',
-      name: 'Temporary Burner Wallets',
-      icon: <Flame size={18} />,
-      desc: 'Addresses generated within 48 hours of illicit funds receipt, having zero prior transaction history and completely drained to zero balance.',
-      defaultSeverity: 'HIGH',
-    },
-    {
-      id: 'TYP-07',
-      name: 'Circular Round-Tripping Flow',
-      icon: <RefreshCw size={18} />,
-      desc: 'Closed-loop transactional cycles where funds return to previously active addresses or internal scam syndicate hot wallets.',
-      defaultSeverity: 'MEDIUM',
-    },
-  ];
+  const { typologies, xgboostFeatures, nodes } = currentCase;
 
   return (
-    <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
-      {/* Module Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="surface" style={{ marginBottom: '16px', overflow: 'hidden' }}>
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div style={{
+        padding: '10px 18px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', flexWrap: 'wrap', gap: '10px',
+        background: '#151310',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: 'var(--accent-hazard)',
-              fontWeight: 700,
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <ShieldAlert size={16} />
-            MODULE 4: LAUNDERING &amp; INTERMEDIARY TYPOLOGY DETECTORS
-          </div>
-          <span className="badge badge-hazard">Cypher Rules + OddBall + Burst</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4' }}>
+            FATF Typology &amp; Anomaly Screening
+          </span>
+          <span className="badge badge-hazard">
+            {typologies.filter(t => t.detected).length} of {TYPOLOGY_DEFS.length} Flagged
+          </span>
         </div>
 
-        {/* View Switcher */}
-        <div style={{ display: 'flex', gap: '6px', background: 'rgba(0, 0, 0, 0.3)', padding: '3px', borderRadius: '8px' }}>
-          <button
-            onClick={() => setActiveTab('TYPOLOGIES')}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 600,
-              background: activeTab === 'TYPOLOGIES' ? 'var(--accent-blue)' : 'transparent',
-              color: activeTab === 'TYPOLOGIES' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            FATF Typology Rules (7)
-          </button>
-          <button
-            onClick={() => setActiveTab('ODDBALL')}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 600,
-              background: activeTab === 'ODDBALL' ? 'var(--accent-blue)' : 'transparent',
-              color: activeTab === 'ODDBALL' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            OddBall Anomaly (Akoglu 2010)
-          </button>
-          <button
-            onClick={() => setActiveTab('XGBOOST')}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 600,
-              background: activeTab === 'XGBOOST' ? 'var(--accent-blue)' : 'transparent',
-              color: activeTab === 'XGBOOST' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            Graph-Aware XGBoost (SHAP)
-          </button>
+        {/* Sub-tabs */}
+        <div style={{ display: 'flex', gap: '3px', background: '#201c18', padding: '3px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          {([
+            { key: 'TYPOLOGIES', label: 'FATF Rules' },
+            { key: 'ODDBALL',    label: 'OddBall Anomaly' },
+            { key: 'XGBOOST',   label: 'XGBoost Features' },
+          ] as const).map(t => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              style={{
+                padding: '4px 12px', borderRadius: '4px', border: 'none',
+                cursor: 'pointer', fontSize: '12px', fontWeight: activeTab === t.key ? 600 : 400,
+                background: activeTab === t.key ? '#332b22' : 'transparent',
+                color: activeTab === t.key ? '#f59e0b' : 'var(--text-muted)',
+                transition: 'background 0.15s',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* TAB 1: Typology Rules */}
-      {activeTab === 'TYPOLOGIES' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '14px' }}>
-          {ALL_TYPOLOGY_RULES.map((rule) => {
-            const detectedMatch = typologies.find((t) => t.name.toLowerCase().includes(rule.name.toLowerCase().slice(0, 8)));
-            const isDetected = !!detectedMatch;
+      <div style={{ padding: '16px 18px' }}>
 
-            return (
-              <div
-                key={rule.id}
-                style={{
-                  padding: '16px',
-                  borderRadius: '10px',
-                  background: isDetected ? 'rgba(239, 68, 68, 0.08)' : 'rgba(15, 23, 42, 0.45)',
-                  border: isDetected ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border-subtle)',
-                  boxShadow: isDetected ? '0 0 16px rgba(239, 68, 68, 0.15)' : 'none',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ color: isDetected ? 'var(--accent-hazard)' : 'var(--text-muted)' }}>
-                      {rule.icon}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {rule.name}
+        {/* ── Tab 1: FATF Typologies ──────────────────────────────── */}
+        {activeTab === 'TYPOLOGIES' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '10px' }}>
+            {TYPOLOGY_DEFS.map(rule => {
+              const match = typologies.find(t => t.name.toLowerCase().includes(rule.name.toLowerCase().slice(0, 7)));
+              const hit = !!match;
+
+              return (
+                <div
+                  key={rule.id}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: hit ? 'rgba(220, 38, 38, 0.04)' : '#161412',
+                    border: hit ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid var(--border)',
+                    borderLeft: hit ? '3px solid #dc2626' : '1px solid var(--border)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ color: hit ? '#dc2626' : '#6e675d' }}>
+                        <rule.icon size={16} />
                       </div>
-                      <span className="font-mono" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {rule.id} &bull; Cypher Graph Pattern
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: hit ? '#fbf8f4' : 'var(--text-secondary)' }}>
+                          {rule.name}
+                        </div>
+                        <div className="font-mono" style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                          {rule.id}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`badge ${hit ? 'badge-hazard' : 'badge-emerald'}`}>
+                      {hit ? `${match?.confidence}% conf.` : 'Clean'}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: hit ? '8px' : 0 }}>
+                    {hit && match ? match.description : rule.desc}
+                  </p>
+
+                  {hit && match && (
+                    <div style={{ padding: '8px 10px', borderRadius: '6px', background: '#0e0d0b', border: '1px solid var(--border)', marginTop: '8px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#fca5a5', marginBottom: '4px' }}>
+                        On-Chain Evidence:
+                      </div>
+                      <ul style={{ paddingLeft: '14px', margin: 0 }}>
+                        {match.indicators.map((ind, i) => (
+                          <li key={i} style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                            {ind}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Tab 2: OddBall Anomaly Engine ──────────────────────── */}
+        {activeTab === 'ODDBALL' && (
+          <div>
+            <div style={{
+              padding: '12px 16px', borderRadius: '8px', marginBottom: '14px',
+              background: '#161412', border: '1px solid var(--border)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Cpu size={15} color="var(--amber)" />
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4' }}>
+                  OddBall Graph Egonet Anomaly Scoring
+                </span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Computes deviations from power-law egonet scaling (W ~ N^1.15). Suspect mules display excessive volume through unusually few burner addresses, indicating automated layering.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '10px' }}>
+              {nodes.map(n => {
+                const isAnomaly = n.oddBallScore > 0.7;
+                const pct = Math.round(n.oddBallScore * 100);
+                return (
+                  <div key={n.id} style={{
+                    padding: '12px 14px', borderRadius: '8px',
+                    background: isAnomaly ? 'rgba(220, 38, 38, 0.04)' : '#161412',
+                    border: isAnomaly ? '1px solid rgba(220, 38, 38, 0.3)' : '1px solid var(--border)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#fbf8f4' }}>{n.label}</div>
+                      <span
+                        className="font-mono"
+                        style={{ fontSize: '12px', fontWeight: 700, color: isAnomaly ? '#ef4444' : n.oddBallScore > 0.4 ? '#f59e0b' : '#16a34a' }}
+                      >
+                        {n.oddBallScore.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="score-bar-track" style={{ marginBottom: '8px' }}>
+                      <div
+                        className="score-bar-fill"
+                        style={{
+                          width: `${pct}%`,
+                          background: isAnomaly ? '#dc2626' : '#16a34a',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <span>Txs: {n.txCount}</span>
+                      <span>Vol: {n.totalReceived.toLocaleString()} {n.currency}</span>
+                      {isAnomaly && <span className="badge badge-hazard" style={{ fontSize: '9.5px' }}>ANOMALY</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 3: XGBoost SHAP ──────────────────────────────────── */}
+        {activeTab === 'XGBOOST' && (
+          <div>
+            <div style={{
+              padding: '12px 16px', borderRadius: '8px', marginBottom: '14px',
+              background: '#161412', border: '1px solid var(--border)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <BarChart2 size={15} color="var(--amber)" />
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4' }}>
+                  XGBoost Classifier · SHAP Feature Contribution
+                </span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Ranks key graph topology features driving the fraud risk classification for court-admissible evidence.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {xgboostFeatures.map((feat, i) => {
+                const barPct = Math.min(100, Math.abs(feat.impact) * 200);
+                return (
+                  <div key={i} style={{
+                    padding: '10px 14px', borderRadius: '6px',
+                    background: '#161412',
+                    border: '1px solid var(--border)',
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', gap: '14px', flexWrap: 'wrap',
+                  }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4', marginBottom: '2px' }}>{feat.featureName}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{feat.description}</div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '120px', height: '5px', background: '#28231d', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${barPct}%`, height: '100%', background: '#d97706', borderRadius: '3px' }} />
+                      </div>
+                      <span className="font-mono" style={{ fontSize: '12px', fontWeight: 600, color: '#f59e0b', width: '45px', textAlign: 'right' }}>
+                        +{feat.impact.toFixed(2)}
                       </span>
                     </div>
                   </div>
-
-                  <span className={`badge ${isDetected ? 'badge-hazard' : 'badge-emerald'}`}>
-                    {isDetected ? `Triggered (${detectedMatch?.confidence}%)` : 'Normal / Passed'}
-                  </span>
-                </div>
-
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '10px' }}>
-                  {isDetected && detectedMatch ? detectedMatch.description : rule.desc}
-                </p>
-
-                {isDetected && detectedMatch && (
-                  <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '8px 10px', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#fca5a5', marginBottom: '4px' }}>
-                      ON-CHAIN SIGNALS:
-                    </div>
-                    <ul style={{ paddingLeft: '16px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                      {detectedMatch.indicators.map((ind, i) => (
-                        <li key={i}>{ind}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* TAB 2: OddBall Anomaly Engine */}
-      {activeTab === 'ODDBALL' && (
-        <div>
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '10px',
-              background: 'rgba(14, 165, 233, 0.08)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <Cpu size={18} color="var(--accent-cyan)" />
-              <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent-cyan)' }}>
-                OddBall Anomaly Spotting Engine (Akoglu, McGlohon &amp; Faloutsos, PAKDD 2010)
-              </h4>
+                );
+              })}
             </div>
-            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              ORION inspects the 1-hop egonet of every wallet address. In legitimate peer-to-peer networks, the egonet total transaction weight <code>W</code> scales as a power-law function of the node degree <code>N</code>: 
-              <span className="font-mono" style={{ color: 'var(--accent-cyan)', fontWeight: 700, marginLeft: '6px' }}>
-                W ~ N^θ (where θ ≈ 1.15)
-              </span>. 
-              Laundering collectors and mule aggregators exhibit catastrophic power-law deviations (excessive high volume through a few burner peers), generating high OddBall anomaly scores.
-            </p>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' }}>
-            {currentCase.nodes.map((n) => (
-              <div
-                key={n.id}
-                style={{
-                  padding: '14px',
-                  borderRadius: '10px',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {n.label}
-                  </span>
-                  <span
-                    className="font-mono"
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: n.oddBallScore > 0.7 ? 'var(--accent-hazard)' : n.oddBallScore > 0.4 ? 'var(--accent-amber)' : 'var(--accent-emerald)',
-                    }}
-                  >
-                    OddBall: {n.oddBallScore}
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
-                  <div
-                    style={{
-                      width: `${n.oddBallScore * 100}%`,
-                      height: '100%',
-                      background: n.oddBallScore > 0.7 ? 'linear-gradient(90deg, #f59e0b, #ef4444)' : 'linear-gradient(90deg, #059669, #10b981)',
-                      borderRadius: '4px',
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                  <span>Tx Count (Degree): {n.txCount}</span>
-                  <span>Volume: {n.totalReceived.toLocaleString()} {n.currency}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: Graph-Aware XGBoost & SHAP */}
-      {activeTab === 'XGBOOST' && (
-        <div>
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '10px',
-              background: 'rgba(99, 102, 241, 0.08)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <BarChart2 size={18} color="var(--accent-indigo)" />
-              <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#c7d2fe' }}>
-                Graph-Aware XGBoost Classifier &bull; SHAP Feature Attribution
-              </h4>
-            </div>
-            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              In Stage 3 of ORION’s attribution ladder, an ensemble XGBoost model synthesizes graph-topology metrics (betweenness centrality, sink proximity, OddBall deviation, and burst timing) to classify suspect risk with high precision while minimizing false positives at LEAs and VASPs.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {xgboostFeatures.map((feat, idx) => (
-              <div
-                key={idx}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  background: 'rgba(15, 23, 42, 0.7)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: '220px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {feat.featureName}
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{feat.description}</div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '140px', height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        width: `${Math.abs(feat.impact) * 200}%`,
-                        height: '100%',
-                        background: 'linear-gradient(90deg, #38bdf8, #818cf8)',
-                        borderRadius: '4px',
-                      }}
-                    />
-                  </div>
-                  <span className="font-mono" style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--accent-cyan)', width: '50px', textAlign: 'right' }}>
-                    +{feat.impact.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

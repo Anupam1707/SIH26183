@@ -2,253 +2,142 @@
 
 import React, { useState } from 'react';
 import { CaseData } from '../types/orion';
-import { X, Send, BellRing, Smartphone, Mail, Globe, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { X, Send, BellRing, Smartphone, Mail, Globe, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface AlertDispatcherModalProps {
   currentCase: CaseData;
   onClose: () => void;
 }
 
-export const AlertDispatcherModal: React.FC<AlertDispatcherModalProps> = ({
-  currentCase,
-  onClose,
-}) => {
-  const [dispatchStatus, setDispatchStatus] = useState<{
-    sms: 'IDLE' | 'SENDING' | 'SENT';
-    email: 'IDLE' | 'SENDING' | 'SENT';
-    sahyog: 'IDLE' | 'SENDING' | 'SENT';
-  }>({
-    sms: 'IDLE',
-    email: 'IDLE',
-    sahyog: 'IDLE',
+type Status = 'IDLE' | 'SENDING' | 'SENT';
+
+export const AlertDispatcherModal: React.FC<AlertDispatcherModalProps> = ({ currentCase, onClose }) => {
+  const [status, setStatus] = useState<{ sms: Status; email: Status; sahyog: Status }>({
+    sms: 'IDLE', email: 'IDLE', sahyog: 'IDLE',
   });
 
-  const complaint = currentCase.complaint;
-  const attribution = currentCase.attribution;
-  const minCut = currentCase.minCut;
+  const { complaint, attribution, minCut } = currentCase;
+  const allSent = status.sms === 'SENT' && status.email === 'SENT' && status.sahyog === 'SENT';
 
-  const handleTriggerDispatch = () => {
-    setDispatchStatus({ sms: 'SENDING', email: 'SENDING', sahyog: 'SENDING' });
-
-    setTimeout(() => {
-      setDispatchStatus((s) => ({ ...s, sms: 'SENT' }));
-    }, 600);
-
-    setTimeout(() => {
-      setDispatchStatus((s) => ({ ...s, email: 'SENT' }));
-    }, 1100);
-
-    setTimeout(() => {
-      setDispatchStatus((s) => ({ ...s, sahyog: 'SENT' }));
-    }, 1600);
+  const handleDispatch = () => {
+    setStatus({ sms: 'SENDING', email: 'SENDING', sahyog: 'SENDING' });
+    setTimeout(() => setStatus(s => ({ ...s, sms:    'SENT' })), 500);
+    setTimeout(() => setStatus(s => ({ ...s, email:  'SENT' })), 900);
+    setTimeout(() => setStatus(s => ({ ...s, sahyog: 'SENT' })), 1400);
   };
 
-  const isAllSent = dispatchStatus.sms === 'SENT' && dispatchStatus.email === 'SENT' && dispatchStatus.sahyog === 'SENT';
+  const channels = [
+    {
+      key: 'sms',
+      icon: <Smartphone size={16} />,
+      iconColor: '#f59e0b',
+      title: 'SMS Flash Alert to Investigating Officer',
+      sub: `${complaint.assignedOfficer} · +91 98450 XXXXX`,
+      st: status.sms,
+    },
+    {
+      key: 'email',
+      icon: <Mail size={16} />,
+      iconColor: '#c2850c',
+      title: 'Encrypted Email + BNSS §107 Requisition',
+      sub: `${attribution.nodalOfficerContact} · CC: nodal.${complaint.state.toLowerCase().replace(/ /g, '')}@gov.in`,
+      st: status.email,
+    },
+    {
+      key: 'sahyog',
+      icon: <Globe size={16} />,
+      iconColor: '#ea580c',
+      title: 'I4C NCRP / SAHYOG Gateway API Dispatch',
+      sub: `Direct ingestion to VASP Compliance Portal (Freeze value: $${minCut.blockedAmountUsd.toLocaleString()})`,
+      st: status.sahyog,
+    },
+  ];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="glass-panel"
-        onClick={(e) => e.stopPropagation()}
+        className="modal-panel"
+        onClick={e => e.stopPropagation()}
         style={{
-          width: '700px',
-          maxWidth: '92vw',
-          background: 'rgba(10, 16, 32, 0.98)',
-          border: '1px solid rgba(56, 189, 248, 0.4)',
-          boxShadow: '0 0 40px rgba(0, 0, 0, 0.9)',
-          borderRadius: '16px',
-          overflow: 'hidden',
+          width: '620px', maxWidth: '92vw',
+          border: '1px solid var(--border-medium)',
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: '16px 24px',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'rgba(14, 165, 233, 0.1)',
-          }}
-        >
+        <div style={{
+          padding: '14px 20px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: '#151310',
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <BellRing size={20} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>
-              Multi-Channel Real-Time Alert Dispatcher
-            </h3>
+            <BellRing size={16} color="var(--primary)" />
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#fbf8f4' }}>
+                Multi-Channel Alert Dispatcher
+              </h3>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '1px' }}>
+                Case Reference: <span className="font-mono">{complaint.complaintId}</span>
+              </p>
+            </div>
           </div>
-
-          <button onClick={onClose} className="btn btn-secondary" style={{ padding: '6px 8px', borderRadius: '50%' }}>
-            <X size={16} />
-          </button>
+          <button onClick={onClose} className="btn btn-ghost btn-icon"><X size={15} /></button>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px' }}>
-          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '18px', lineHeight: 1.5 }}>
-            Triggering automated high-priority alerts across state and central cyber crime infrastructure to enforce asset freezing within the critical Golden Hour window.
+        <div style={{ padding: '18px 20px' }}>
+          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.5 }}>
+            Transmit verified attribution signals and freeze requisitions to the assigned officer and recipient exchange nodal desk.
           </p>
 
-          {/* Dispatch Channels */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {/* Channel 1: SMS */}
-            <div
-              style={{
-                padding: '14px 16px',
-                borderRadius: '10px',
-                background: 'rgba(15, 23, 42, 0.7)',
-                border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ color: 'var(--accent-amber)' }}>
-                  <Smartphone size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
-                    SMS Broadcast to Investigating Officer
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Recipient: {complaint.assignedOfficer} (+91 98450 XXXXX) &bull; Flash Alert
+          {/* Channels */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+            {channels.map(ch => (
+              <div key={ch.key} style={{
+                padding: '12px 14px', borderRadius: '6px',
+                background: ch.st === 'SENT' ? 'rgba(22, 163, 74, 0.05)' : '#12110e',
+                border: `1px solid ${ch.st === 'SENT' ? 'rgba(22, 163, 74, 0.3)' : 'var(--border)'}`,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ color: ch.iconColor, flexShrink: 0 }}>{ch.icon}</div>
+                  <div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#fbf8f4' }}>{ch.title}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{ch.sub}</div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                {dispatchStatus.sms === 'IDLE' && <span className="badge badge-amber">Ready</span>}
-                {dispatchStatus.sms === 'SENDING' && (
-                  <span className="badge badge-cyan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Loader2 size={12} className="animate-spin" /> Dispatching
-                  </span>
-                )}
-                {dispatchStatus.sms === 'SENT' && (
-                  <span className="badge badge-emerald" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CheckCircle2 size={12} /> Delivered
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Channel 2: Email */}
-            <div
-              style={{
-                padding: '14px 16px',
-                borderRadius: '10px',
-                background: 'rgba(15, 23, 42, 0.7)',
-                border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ color: 'var(--accent-cyan)' }}>
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
-                    Encrypted Email with Dossier &amp; BNSS Sec 107 Order
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    To: {attribution.nodalOfficerContact} &bull; CC: cybercrime.{complaint.state.toLowerCase()}@nic.in
-                  </div>
+                <div style={{ flexShrink: 0 }}>
+                  {ch.st === 'IDLE' && <span className="badge badge-amber">Pending</span>}
+                  {ch.st === 'SENDING' && (
+                    <span className="badge badge-amber" style={{ gap: '5px' }}>
+                      <Loader2 size={11} className="animate-spin" /> Sending
+                    </span>
+                  )}
+                  {ch.st === 'SENT' && (
+                    <span className="badge badge-emerald" style={{ gap: '5px' }}>
+                      <CheckCircle2 size={11} /> Delivered
+                    </span>
+                  )}
                 </div>
               </div>
-
-              <div>
-                {dispatchStatus.email === 'IDLE' && <span className="badge badge-amber">Ready</span>}
-                {dispatchStatus.email === 'SENDING' && (
-                  <span className="badge badge-cyan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Loader2 size={12} className="animate-spin" /> Transmitting
-                  </span>
-                )}
-                {dispatchStatus.email === 'SENT' && (
-                  <span className="badge badge-emerald" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CheckCircle2 size={12} /> Dispatched
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Channel 3: SAHYOG API */}
-            <div
-              style={{
-                padding: '14px 16px',
-                borderRadius: '10px',
-                background: 'rgba(15, 23, 42, 0.7)',
-                border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ color: 'var(--accent-purple)' }}>
-                  <Globe size={20} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
-                    NCRP / SAHYOG I4C Central Gateway API Push
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Payload: Target Deposit {attribution.depositAddress.slice(0, 10)}... | Est: ${minCut.blockedAmountUsd.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                {dispatchStatus.sahyog === 'IDLE' && <span className="badge badge-amber">Ready</span>}
-                {dispatchStatus.sahyog === 'SENDING' && (
-                  <span className="badge badge-cyan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Loader2 size={12} className="animate-spin" /> Syncing Webhook
-                  </span>
-                )}
-                {dispatchStatus.sahyog === 'SENT' && (
-                  <span className="badge badge-emerald" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CheckCircle2 size={12} /> Sync Complete
-                  </span>
-                )}
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Acknowledgement Box */}
-          {isAllSent && (
-            <div
-              style={{
-                padding: '14px 18px',
-                borderRadius: '10px',
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                color: 'var(--accent-emerald)',
-                fontSize: '12.5px',
-                marginBottom: '16px',
-              }}
+          {/* Action Row */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <button onClick={onClose} className="btn btn-ghost">
+              Cancel
+            </button>
+            <button
+              onClick={handleDispatch}
+              disabled={allSent || status.sms === 'SENDING'}
+              className="btn btn-primary"
             >
-              <ShieldCheck size={24} />
-              <div>
-                <strong>Global Alert Broadcast Confirmed.</strong>
-                <div>NCRP Log Token: <code className="font-mono">I4C-RT-ACK-{Math.floor(100000 + Math.random() * 900000)}</code>. All statutory audit logs stored for legal admissibility.</div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Trigger */}
-          <button
-            onClick={handleTriggerDispatch}
-            disabled={dispatchStatus.sms === 'SENDING' || isAllSent}
-            className={`btn ${isAllSent ? 'btn-emerald' : 'btn-primary'}`}
-            style={{ width: '100%', height: '42px', fontSize: '14px' }}
-          >
-            <Send size={16} />
-            {isAllSent ? 'All Alerts Successfully Broadcasted' : 'Transmit Real-Time Multi-Channel Alerts'}
-          </button>
+              <Send size={13} />
+              {allSent ? 'All Alerts Delivered' : status.sms === 'SENDING' ? 'Dispatching…' : 'Dispatch All Alerts'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

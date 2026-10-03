@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { MinCutSolution, CaseData } from '../types/orion';
-import { Target, Zap, ShieldAlert, CheckCircle, ArrowRight, Lock, DollarSign, Award } from 'lucide-react';
+import { Target, Zap, Lock, DollarSign, Award, TrendingUp } from 'lucide-react';
 
 interface MinCutRecommenderProps {
   minCut: MinCutSolution;
@@ -10,159 +10,131 @@ interface MinCutRecommenderProps {
   onOpenNoticeModal: () => void;
 }
 
-export const MinCutRecommender: React.FC<MinCutRecommenderProps> = ({
-  minCut,
-  currentCase,
-  onOpenNoticeModal,
-}) => {
-  const intermediateCount = currentCase.nodes.filter((n) => n.type === 'INTERMEDIARY' || n.type === 'PEEL_NODE').length;
+export const MinCutRecommender: React.FC<MinCutRecommenderProps> = ({ minCut, currentCase, onOpenNoticeModal }) => {
+  const intermediateCount = currentCase.nodes.filter(n => n.type === 'INTERMEDIARY' || n.type === 'PEEL_NODE').length;
 
   return (
-    <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
-      {/* Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              background: 'rgba(245, 158, 11, 0.15)',
-              color: 'var(--accent-amber)',
-              fontWeight: 700,
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <Target size={16} />
-            MODULE 6: GRAPH MIN-CUT FREEZE OPTIMIZER (FORD-FULKERSON BOTTLENECK)
-          </div>
-          <span className="badge badge-amber">Algorithmic Resource Optimization</span>
-        </div>
+    <div className="surface" style={{ marginBottom: '16px', overflow: 'hidden' }}>
 
-        <button onClick={onOpenNoticeModal} className="btn btn-hazard">
-          <Lock size={14} />
-          Execute Optimal Freeze Order
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div style={{
+        padding: '10px 18px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        flexWrap: 'wrap', gap: '10px', background: '#151310',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#fbf8f4' }}>
+            Min-Cut Freeze Optimizer
+          </span>
+          <span className="badge badge-amber">Ford-Fulkerson Max-Flow</span>
+        </div>
+        <button onClick={onOpenNoticeModal} className="btn btn-hazard" style={{ fontSize: '12px' }}>
+          <Lock size={13} /> Execute Target Freeze
         </button>
       </div>
 
-      {/* Comparison Grid: Naive Approach vs ORION Min-Cut */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '16px',
-          marginBottom: '20px',
-        }}
-      >
-        {/* Naive Tracing */}
-        <div
-          style={{
-            padding: '18px',
-            borderRadius: '12px',
-            background: 'rgba(15, 23, 42, 0.5)',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-            CONVENTIONAL POLICE TRACING (NAIVE APPROACH)
-          </div>
-          <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '12px' }}>
-            Freeze Every Individual Mule Wallet
-          </h4>
+      <div style={{ padding: '16px 18px' }}>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Legal Freeze Notices Needed:</span>
-              <strong style={{ color: 'var(--accent-hazard)' }}>{intermediateCount + 2} Formal Orders</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Administrative Turnaround:</span>
-              <strong style={{ color: 'var(--accent-hazard)' }}>3 to 7 Days (Funds Escaped)</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Recovery Rate:</span>
-              <strong style={{ color: 'var(--accent-hazard)' }}>&lt; 15% (Mules already drained)</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Investigator Burden:</span>
-              <strong style={{ color: 'var(--accent-hazard)' }}>Extreme (Alert Fatigue)</strong>
+        {/* ── Comparison Grid ───────────────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+
+          {/* Naive approach */}
+          <div style={{
+            padding: '16px 18px', borderRadius: '8px',
+            background: '#161412', border: '1px solid var(--border)',
+          }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Conventional Manual Police Tracing</div>
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '14px' }}>
+              Freeze Every Intermediary Mule Sequentially
+            </h4>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Freeze Notices Needed', value: `${intermediateCount + 2} Separate Orders`, color: '#f87171' },
+                { label: 'Turnaround Time',        value: '3–7 Days',           color: '#f87171' },
+                { label: 'Asset Recovery Rate',    value: '< 15% (Mules already drained)', color: '#f87171' },
+                { label: 'Administrative Overhead', value: 'High alert fatigue across multiple banks', color: 'var(--text-muted)' },
+              ].map(r => (
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{r.label}</span>
+                  <span style={{ fontWeight: 600, color: r.color }}>{r.value}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* ORION Min-Cut */}
-        <div
-          style={{
-            padding: '18px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.4)',
-            boxShadow: '0 0 20px rgba(245, 158, 11, 0.15)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--accent-amber)', textTransform: 'uppercase', fontWeight: 700 }}>
-              ORION GRAPH MIN-CUT BOTTLENECK
-            </span>
-            <span className="badge badge-amber" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Award size={12} />
-              Recommended
-            </span>
-          </div>
+          {/* Orion approach */}
+          <div style={{
+            padding: '16px 18px', borderRadius: '8px',
+            background: '#1c1813',
+            border: '1px solid #d97706',
+            borderLeft: '3px solid #d97706',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>Orion Graph Min-Cut Optimizer</div>
+              <span className="badge badge-amber"><Award size={11} /> Recommended Strategy</span>
+            </div>
 
-          <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginTop: '4px', marginBottom: '12px' }}>
-            Target The Exact Exchange Ingress Point
-          </h4>
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#fbf8f4', marginBottom: '14px' }}>
+              Target Exchange Bottleneck Ingress Directly
+            </h4>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', color: 'var(--text-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Legal Freeze Notices Needed:</span>
-              <strong style={{ color: 'var(--accent-emerald)', fontSize: '14px' }}>
-                ONLY {minCut.requiredFreezesCount} DIRECT NOTICE
-              </strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Turnaround Speed:</span>
-              <strong style={{ color: 'var(--accent-emerald)' }}>Golden Hour (Under 30 Mins)</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Funds Blocked at Destination:</span>
-              <strong style={{ color: 'var(--accent-cyan)', fontSize: '14px' }}>
-                ${minCut.blockedAmountUsd.toLocaleString()} ({minCut.percentFundsPreserved}% of Total Flow)
-              </strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>VASP Compliance Mechanism:</span>
-              <strong style={{ color: 'var(--accent-amber)' }}>Custodial KYC Lock via Sec 107 BNSS</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Freeze Notices Needed', value: `ONLY ${minCut.requiredFreezesCount} Direct Notice`, color: '#4ade80' },
+                { label: 'Turnaround Time',        value: 'Immediate (Within Golden Hour)', color: '#4ade80' },
+                { label: 'Funds Blocked',          value: `$${minCut.blockedAmountUsd.toLocaleString()} (${minCut.percentFundsPreserved}%)`, color: '#f59e0b' },
+                { label: 'Enforcement Route',      value: 'Custodial KYC Lock · §107 BNSS', color: '#fbbf24' },
+              ].map(r => (
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>{r.label}</span>
+                  <span style={{ fontWeight: 600, color: r.color }}>{r.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Algorithmic Explanation Banner */}
-      <div
-        style={{
-          padding: '14px 18px',
-          borderRadius: '10px',
-          background: 'rgba(10, 16, 32, 0.8)',
-          border: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '14px',
-        }}
-      >
-        <div style={{ color: 'var(--accent-amber)' }}>
-          <Zap size={24} />
+        {/* ── Stats Row ─────────────────────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+          {[
+            { label: 'Orders Required', value: minCut.requiredFreezesCount.toString(), color: '#16a34a', icon: <Target size={14} /> },
+            { label: 'Funds Preserved', value: `${minCut.percentFundsPreserved}%`, color: '#d97706', icon: <TrendingUp size={14} /> },
+            { label: 'USD Blocked', value: `$${(minCut.blockedAmountUsd / 1000).toFixed(0)}k`, color: '#f59e0b', icon: <DollarSign size={14} /> },
+            { label: 'Response Target', value: '< 30 min', color: '#16a34a', icon: <Zap size={14} /> },
+          ].map(s => (
+            <div key={s.label} style={{
+              padding: '10px 14px', borderRadius: '6px',
+              background: '#161412', border: '1px solid var(--border)',
+              display: 'flex', flexDirection: 'column', gap: '2px',
+            }}>
+              <div style={{ color: s.color }}>{s.icon}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#fbf8f4', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
+                {s.value}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{s.label}</div>
+            </div>
+          ))}
         </div>
-        <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>
-            ALGORITHMIC RECOMMENDATION (MAX-FLOW / MIN-CUT THEOREM):
+
+        {/* ── Algorithm Explanation ─────────────────────────────────── */}
+        <div style={{
+          padding: '12px 16px', borderRadius: '8px',
+          background: '#161412', border: '1px solid var(--border)',
+          display: 'flex', alignItems: 'flex-start', gap: '12px',
+        }}>
+          <div style={{ color: '#f59e0b', flexShrink: 0, marginTop: '2px' }}>
+            <Zap size={16} />
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            {minCut.bottleneckExplanation}
-          </p>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: '#f59e0b', marginBottom: '3px' }}>
+              Max-Flow / Min-Cut Algorithmic Recommendation:
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              {minCut.bottleneckExplanation}
+            </p>
+          </div>
         </div>
       </div>
     </div>
