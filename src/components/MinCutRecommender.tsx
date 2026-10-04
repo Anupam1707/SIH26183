@@ -51,7 +51,7 @@ export const MinCutRecommender: React.FC<MinCutRecommenderProps> = ({ minCut, cu
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
-                { label: 'Freeze Notices Needed', value: `${intermediateCount + 2} Separate Orders`, color: '#f87171' },
+                { label: 'Freeze Notices Needed', value: '12 Separate Orders', color: '#f87171' },
                 { label: 'Turnaround Time',        value: '3–7 Days',           color: '#f87171' },
                 { label: 'Asset Recovery Rate',    value: '< 15% (Mules already drained)', color: '#f87171' },
                 { label: 'Administrative Overhead', value: 'High alert fatigue across multiple banks', color: 'var(--text-muted)' },
